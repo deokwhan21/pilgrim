@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>천로역정 퀴즈 게임</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="container">
+                <div class="hero">
+                    <h1 class="title">✝️ 천로역정</h1>
+                    <p class="subtitle">크리스찬의 여정을 따라가는 퀴즈 게임</p>
+                    <div class="scroll-decoration">📜</div>
+                </div>
+
+                <div class="intro-text">
+                    <p>멸망의 도시에서 천성까지,<br>크리스찬과 함께 믿음의 여정을 시작하세요.</p>
+                </div>
+
+                <div class="progress-card">
+                    <h3>🎯 진행 현황</h3>
+                    <div class="progress-bar">
+                        <div id="total-progress" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">0개 코스 완료 / 3개 코스</p>
+                </div>
+
+                <button class="btn-primary" onclick="startGame()">여정 시작하기</button>
+                <button class="btn-secondary" onclick="resetProgress()">진행도 초기화</button>
+            </div>
+        </div>
+
+        <!-- Course Selection Screen -->
+        <div id="course-screen" class="screen">
+            <div class="container">
+                <h2 class="screen-title">코스 선택</h2>
+                <div id="course-list" class="course-list"></div>
+                <button class="btn-secondary" onclick="showScreen('home-screen')">홈으로 돌아가기</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="container">
+                <div class="quiz-header">
+                    <h2 id="quiz-course-name" class="screen-title"></h2>
+                    <div class="quiz-progress">
+                        <span id="quiz-number">문제 1</span>
+                        <span class="score">점수: <span id="score">0</span></span>
+                    </div>
+                </div>
+
+                <div class="quiz-card">
+                    <p id="quiz-question" class="question"></p>
+                    <div id="quiz-options" class="options"></div>
+                </div>
+
+                <button class="btn-secondary" onclick="showScreen('course-screen')">코스 선택으로</button>
+            </div>
+        </div>
+
+        <!-- Lesson Screen -->
+        <div id="lesson-screen" class="screen">
+            <div class="container">
+                <div class="lesson-card">
+                    <div class="lesson-icon">✨</div>
+                    <h2 id="lesson-title" class="lesson-title"></h2>
+                    <div id="lesson-content" class="lesson-content"></div>
+                    <div id="lesson-verse" class="bible-verse"></div>
+                </div>
+
+                <button id="next-quiz-btn" class="btn-primary" onclick="nextQuiz()">다음 문제</button>
+            </div>
+        </div>
+
+        <!-- Journey Map Screen -->
+        <div id="map-screen" class="screen">
+            <div class="container">
+                <h2 class="screen-title">🗺️ 천로역정 여정 지도</h2>
+
+                <div class="map-container">
+                    <svg id="journey-map" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 배경 장식 -->
+                        <defs>
+                            <filter id="paper-texture">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" />
+                                <feDiffuseLighting in="noise" lighting-color="#F5E6D3" surfaceScale="1">
+                                    <feDistantLight azimuth="45" elevation="60" />
+                                </feDiffuseLighting>
+                            </filter>
+                        </defs>
+
+                        <!-- 여정 경로 -->
+                        <path id="journey-path" class="journey-path"
+                            d="M 100,500 Q 150,450 200,400 T 300,350 Q 350,300 400,300 T 500,250 Q 550,200 600,150 T 700,100"
+                            fill="none" stroke="#8B7355" stroke-width="4" stroke-dasharray="10,5" />
+
+                        <!-- 코스 노드들 (동적으로 렌더링) -->
+                        <g id="course-nodes"></g>
+                    </svg>
+
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <span class="legend-icon completed">✓</span>
+                            <span>완료</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-icon current">●</span>
+                            <span>현재 위치</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-icon locked">🔒</span>
+                            <span>잠김</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="proceedAfterMap()">계속하기</button>
+                <button class="btn-secondary" onclick="showScreen('course-screen')">코스 선택으로</button>
+            </div>
+        </div>
+
+
+
+        <!-- Word Scramble Mini Game -->
+        <div id="word-scramble-screen" class="screen">
+            <div class="container">
+                <h2 class="screen-title">🔤 단어 맞추기</h2>
+                <div class="minigame-timer">남은 시간: <span id="word-timer">30</span>초</div>
+
+                <div class="word-scramble-game">
+                    <p class="scramble-hint">힌트: <span id="scramble-hint"></span></p>
+                    <div class="scrambled-word" id="scrambled-word"></div>
+                    <input type="text" id="word-input" class="word-input" placeholder="정답을 입력하세요">
+                    <button class="btn-primary" onclick="checkWordAnswer()">확인</button>
+                </div>
+
+                <div id="word-result" class="minigame-result"></div>
+            </div>
+        </div>
+
+        <!-- Memory Match Mini Game -->
+        <div id="memory-match-screen" class="screen">
+            <div class="container">
+                <h2 class="screen-title">🎴 기억력 게임</h2>
+                <div class="minigame-stats">
+                    <span>시도: <span id="memory-attempts">0</span></span>
+                    <span>찾은 짝: <span id="memory-matches">0</span>/6</span>
+                </div>
+
+                <div class="memory-grid" id="memory-grid"></div>
+
+                <div id="memory-result" class="minigame-result"></div>
+            </div>
+        </div>
+
+        <!-- Time Attack Quiz Mini Game -->
+        <div id="time-attack-screen" class="screen">
+            <div class="container">
+                <h2 class="screen-title">⏱️ 타임어택 퀴즈</h2>
+                <div class="minigame-timer">남은 시간: <span id="attack-timer">30</span>초</div>
+                <div class="attack-score">맞춘 문제: <span id="attack-correct">0</span>/5</div>
+
+                <div class="time-attack-game">
+                    <p class="attack-question" id="attack-question"></p>
+                    <div class="attack-buttons">
+                        <button class="attack-btn" onclick="answerTimeAttack(true)">⭕ 맞다</button>
+                        <button class="attack-btn" onclick="answerTimeAttack(false)">❌ 틀리다</button>
+                    </div>
+                </div>
+
+                <div id="attack-result" class="minigame-result"></div>
+            </div>
+        </div>
+
+        <!-- Course Complete Screen -->
+        <div id="complete-screen" class="screen">
+            <div class="container">
+                <div class="complete-card">
+                    <div class="badge-icon" id="badge-icon">🏆</div>
+                    <h2 class="complete-title">코스 완료!</h2>
+                    <p id="complete-message" class="complete-message"></p>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">획득 점수</span>
+                            <span id="final-score" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">정답률</span>
+                            <span id="accuracy" class="stat-value">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 최종 점수 제출 폼 (모든 코스 완료 시 표시) -->
+                <div id="final-submission"
+                    style="display: none; margin-top: 2rem; border-top: 2px solid var(--primary); padding-top: 2rem;">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">🏆 최종 점수 제출</h3>
+                    <p style="margin-bottom: 1rem; color: var(--text-light);">축하합니다! 모든 여정을 마쳤습니다.<br>이름을 입력하고 점수를
+                        제출하세요.</p>
+                    <input type="text" id="player-name" placeholder="이름을 입력하세요"
+                        style="width: 100%; max-width: 300px; padding: 1rem; font-size: 1.1rem; border: 2px solid var(--primary); border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                    <br>
+                    <button class="btn-primary" onclick="submitScore()">점수 보내기</button>
+                </div>
+
+                <button class="btn-primary" onclick="showScreen('course-screen')">다음 코스 선택</button>
+                <button class="btn-secondary" onclick="showScreen('home-screen')">홈으로</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="minigames.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
